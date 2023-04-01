@@ -1,8 +1,8 @@
-### VBAN API implemented in Rust
+# VBAN API implemented in Rust
 
 ## Examples
 
-# Emitter
+### Emitter
 ```rust
 emitter::EmitterBuilder::default()
     .ip_address("192.168.0.1")
@@ -14,7 +14,7 @@ emitter::EmitterBuilder::default()
     .start()?;
 ```
 
-# Receptor
+### Receptor
 ```rust
 receptor::ReceptorBuilder::default()
     .latency(16)
