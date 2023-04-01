@@ -18,8 +18,6 @@ impl VbanReceptorSocket {
     pub fn new(port: u16) -> Result<Self> {
         let addr = SocketAddr::new("0.0.0.0".parse()?, port);
 
-        println!("Binding to: {:?}", addr);
-
         let socket = UdpSocket::bind(addr)?;
 
         Ok(VbanReceptorSocket {
@@ -46,7 +44,7 @@ impl VbanReceptorSocket {
                         producer.push(sample).ok();
                     }
                 }
-                Err(e) => println!("Warning: {}", e),
+                Err(e) => eprintln!("Warning: {}", e),
             }
         }
     }

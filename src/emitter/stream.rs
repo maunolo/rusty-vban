@@ -34,12 +34,8 @@ impl VbanEmitterStream {
             .map(|i| SocketAddr::from(([0, 0, 0, 0], port + i)))
             .collect::<Vec<SocketAddr>>();
 
-        println!("binding to: {:?}", addrs);
-
         let header = Header::new(stream_name);
         let target_address = SocketAddr::new(ip_address.parse()?, port);
-
-        println!("target address: {:?}", target_address);
 
         Ok(Self {
             host,
