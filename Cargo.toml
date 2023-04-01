@@ -1,9 +1,10 @@
 [package]
 name = "rusty-vban"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "VBAN API implementation in Rust"
+documentation = "https://docs.rs/rusty-vban"
 repository = "https://github.com/maunolo/rusty-vban"
 readme = "README.md"
 keywords = ["vban", "audio", "streaming"]

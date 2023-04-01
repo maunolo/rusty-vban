@@ -1,28 +1,36 @@
 # VBAN API implemented in Rust
 
-## Examples
+## API Examples
 
 ### Emitter
 ```rust
-emitter::EmitterBuilder::default()
+use rusty_vban::emitter::EmitterBuilder;
+
+EmitterBuilder::default()
     .ip_address("192.168.0.1")
     .stream_name("Mic")
-    .port(6890)
-    .channels(2)
-    .device("default")
-    .build()?
-    .start()?;
+    .port(6890) // Optional, default: 6890
+    .channels(2) // Optional, default: 2
+    .device("default") // Optional, default: "default"
+    .build()
+    .unwrap()
+    .start()
+    .unwrap();
 ```
 
 ### Receptor
 ```rust
-receptor::ReceptorBuilder::default()
-    .latency(16)
+use rusty_vban::receptor::ReceptorBuilder;
+
+ReceptorBuilder::default()
+    .latency(16) // Optional, default: 16
     .ip_address("192.168.0.1")
     .stream_name("Mic")
-    .port(6890)
-    .channels(2)
-    .device("default")
-    .build()?
-    .start()?;
+    .port(6890) // Optional, default: 6890
+    .channels(2) // Optional, default: 2
+    .device("default") // Optional, default: "default"
+    .build()
+    .unwrap()
+    .start()
+    .unwrap();
 ```
