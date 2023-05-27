@@ -14,7 +14,7 @@ const BIT_RESOLUTION_MASK: u8 = 0b00000111;
 const CODEC_MASK: u8 = 0b11110000;
 pub const HEADER_SIZE: usize = 28;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Header {
     sample_rate: SampleRate,
     sub_protocol: SubProtocol,
@@ -139,7 +139,7 @@ impl From<Header> for [u8; HEADER_SIZE] {
     }
 }
 
-#[derive(Clone, Copy, FromPrimitive, ToPrimitive)]
+#[derive(Clone, Copy, FromPrimitive, ToPrimitive, Debug)]
 pub enum SampleRate {
     Hz6000 = 0,
     Hz12000,
@@ -164,7 +164,7 @@ pub enum SampleRate {
     Hz705600,
 }
 
-#[derive(Clone, Copy, FromPrimitive)]
+#[derive(Clone, Copy, FromPrimitive, Debug)]
 pub enum SubProtocol {
     Audio = 0x00,
     Serial = 0x20,
@@ -176,7 +176,7 @@ pub enum SubProtocol {
     User = 0xe0,
 }
 
-#[derive(Clone, Copy, ToPrimitive, FromPrimitive)]
+#[derive(Clone, Copy, ToPrimitive, FromPrimitive, Debug)]
 pub enum BitResolution {
     Unsigned8Bit = 0,
     Signed16Bit,
@@ -188,7 +188,7 @@ pub enum BitResolution {
     Signed10Bit,
 }
 
-#[derive(Clone, Copy, ToPrimitive, FromPrimitive)]
+#[derive(Clone, Copy, ToPrimitive, FromPrimitive, Debug)]
 pub enum Codec {
     PCM = 0x00,
     VBCA = 0x10,
