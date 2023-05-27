@@ -20,11 +20,13 @@ pub struct Receptor {
     port: u16,
     #[builder(default = "\"default\".to_string()")]
     device: String,
+    #[builder(default = "\"output\".to_string()")]
+    device_type: String,
 }
 
 impl Receptor {
     pub fn start(&self) -> Result<()> {
-        let mut stream = VbanReceptorStream::new(&self.device)?;
+        let mut stream = VbanReceptorStream::new(&self.device, &self.device_type)?;
 
         let (producer, consumer) =
             ring_buffer::start_buffer(self.latency as f32, &stream.device_config()?);

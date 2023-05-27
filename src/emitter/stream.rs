@@ -24,12 +24,23 @@ pub struct VbanEmitterStream {
 }
 
 impl VbanEmitterStream {
-    pub fn new(device_name: &str, stream_name: &str, ip_address: &str, port: u16) -> Result<Self> {
+    pub fn new(
+        device_name: &str,
+        device_type: &str,
+        stream_name: &str,
+        ip_address: &str,
+        port: u16,
+    ) -> Result<Self> {
         let host = cpal::default_host();
-        let device = Arc::new(
-            host.find_input_device(device_name)
+        let device = Arc::new(match device_type {
+            "input" => host
+                .find_input_device(device_name)
                 .ok_or(anyhow!("no input device available"))?,
-        );
+            "output" => host
+                .find_output_device(device_name)
+                .ok_or(anyhow!("no input device available"))?,
+            _ => return Err(anyhow!("invalid device type")),
+        });
         let addrs = (1..=10)
             .map(|i| SocketAddr::from(([0, 0, 0, 0], port + i)))
             .collect::<Vec<SocketAddr>>();

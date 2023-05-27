@@ -16,12 +16,19 @@ pub struct Emitter {
     pub port: u16,
     #[builder(default = "\"default\".to_string()")]
     pub device: String,
+    #[builder(default = "\"input\".to_string()")]
+    device_type: String,
 }
 
 impl Emitter {
     pub fn start(&self) -> Result<()> {
-        let mut stream =
-            VbanEmitterStream::new(&self.device, &self.stream_name, &self.ip_address, self.port)?;
+        let mut stream = VbanEmitterStream::new(
+            &self.device,
+            &self.device_type,
+            &self.stream_name,
+            &self.ip_address,
+            self.port,
+        )?;
         stream.setup_stream()?;
         stream.play()?;
 

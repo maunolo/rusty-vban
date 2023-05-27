@@ -18,12 +18,17 @@ pub struct VbanReceptorStream {
 }
 
 impl VbanReceptorStream {
-    pub fn new(device_name: &str) -> Result<Self> {
+    pub fn new(device_name: &str, device_type: &str) -> Result<Self> {
         let host = cpal::default_host();
-        let device = Arc::new(
-            host.find_output_device(device_name)
-                .ok_or(anyhow!("no output device available"))?,
-        );
+        let device = Arc::new(match device_type {
+            "input" => host
+                .find_input_device(device_name)
+                .ok_or(anyhow!("no input device available"))?,
+            "output" => host
+                .find_output_device(device_name)
+                .ok_or(anyhow!("no input device available"))?,
+            _ => return Err(anyhow!("invalid device type")),
+        });
 
         Ok(Self {
             host,
