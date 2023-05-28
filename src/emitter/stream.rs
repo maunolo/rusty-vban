@@ -144,17 +144,18 @@ fn write_data<T>(
 ) where
     T: Sample + ToSample<i16>,
 {
-    let total_samples = input.len() as usize;
-    let max = MAX_NUM_SAMPLES as f32;
-    let chunks_amount = (total_samples as f32 / max).ceil() as usize;
+    let total_samples = input.len();
+    let mut chunks_amount = total_samples / MAX_NUM_SAMPLES;
+    if total_samples % MAX_NUM_SAMPLES > 0 {
+        chunks_amount += 1;
+    }
     let chunk_num_samples = total_samples / chunks_amount;
 
-    for samples in input.chunks_exact(chunk_num_samples) {
+    for samples in input.chunks(chunk_num_samples) {
         let mut buffer = Vec::new();
 
-        header.set_num_samples(samples.len() as u8 / header.num_channels());
         header.set_frame_number(*frame_count);
-        let header: [u8; 28] = header.into();
+        let header: [u8; 22] = header.into();
         let data = samples
             .iter()
             .flat_map(|s| s.to_sample::<i16>().to_le_bytes())

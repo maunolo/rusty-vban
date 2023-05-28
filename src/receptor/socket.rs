@@ -5,7 +5,6 @@ use std::net::{IpAddr, SocketAddr, UdpSocket};
 use byteorder::{ByteOrder, LittleEndian};
 
 use super::ring_buffer::VbanStreamProducer;
-use crate::protocol::header::{Codec, SubProtocol};
 use crate::protocol::packet::{Packet, MAX_PACKET_SIZE};
 
 #[derive(Debug)]
@@ -92,14 +91,6 @@ fn check_audio_pkt(stream_name: &str, channels: u8, pkt: &Packet) -> Result<()> 
 
     if header.num_channels() != channels {
         return Err(anyhow!("Wrong number of channels"));
-    }
-
-    if !matches!(header.sub_protocol(), SubProtocol::Audio) {
-        return Err(anyhow!("Wrong sub protocol"));
-    }
-
-    if !matches!(header.codec(), Codec::PCM) {
-        return Err(anyhow!("Wrong codec"));
     }
 
     Ok(())

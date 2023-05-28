@@ -1,8 +1,8 @@
 pub const MAX_PACKET_SIZE: usize = 1464;
 use std::convert::TryFrom;
 
+pub use super::header::Header;
 use super::header::HEADER_SIZE;
-pub use super::header::{Codec, Header, SubProtocol};
 
 #[derive(Debug)]
 pub enum Error {
