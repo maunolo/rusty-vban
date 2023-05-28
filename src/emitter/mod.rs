@@ -18,6 +18,8 @@ pub struct Emitter {
     pub device: String,
     #[builder(default = "\"input\".to_string()")]
     device_type: String,
+    #[builder(default = "\"default\".to_string()")]
+    backend: String,
 }
 
 impl Emitter {
@@ -27,6 +29,7 @@ impl Emitter {
             &self.device_type,
             &self.stream_name,
             &self.ip_address,
+            &self.backend,
             self.port,
         )?;
         stream.setup_stream()?;

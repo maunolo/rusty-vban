@@ -12,6 +12,7 @@ use cpal::{
 };
 
 use crate::protocol::header::{Header, MAX_NUM_SAMPLES};
+use crate::utils;
 use crate::utils::cpal::{Device, Host};
 
 pub struct VbanEmitterStream {
@@ -29,9 +30,10 @@ impl VbanEmitterStream {
         device_type: &str,
         stream_name: &str,
         ip_address: &str,
+        host_name: &str,
         port: u16,
     ) -> Result<Self> {
-        let host = cpal::default_host();
+        let host = utils::cpal::host_by_name(host_name)?;
         let device = Arc::new(match device_type {
             "input" => host
                 .find_input_device(device_name)
@@ -116,7 +118,7 @@ impl VbanEmitterStream {
         T: SizedSample + ToSample<i16> + Send + 'static,
     {
         let err_fn = move |error| eprintln!("an error occurred on stream: {}", error);
-        let mut frame_count = 0;
+        let mut frame_count: usize = 0;
 
         let header = self.header.clone();
         let socket = UdpSocket::bind(&self.bind_address_pool[..])?;
