@@ -118,7 +118,7 @@ impl VbanEmitterStream {
         T: SizedSample + ToSample<i16> + Send + 'static,
     {
         let err_fn = move |error| eprintln!("an error occurred on stream: {}", error);
-        let mut frame_count: usize = 0;
+        let mut frame_count = 0;
 
         let header = self.header.clone();
         let socket = UdpSocket::bind(&self.bind_address_pool[..])?;
