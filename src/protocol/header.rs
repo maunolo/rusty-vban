@@ -108,7 +108,7 @@ impl TryFrom<&[u8]> for Header {
         Ok(Self {
             sample_rate,
             sub_protocol,
-            num_samples: samples_per_frame + 1,
+            num_samples: samples_per_frame,
             num_channels: channels + 1,
             bit_resolution,
             codec,
@@ -127,7 +127,7 @@ impl From<Header> for [u8; HEADER_SIZE] {
         'A'.encode_utf8(&mut result[2..]);
         'N'.encode_utf8(&mut result[3..]);
         result[4] = header.sample_rate.to_u8().unwrap();
-        result[5] = header.num_samples - 1;
+        result[5] = header.num_samples;
         result[6] = header.num_channels - 1;
         result[7] = header.bit_resolution.to_u8().unwrap() + header.codec.to_u8().unwrap();
         for i in 0..16 {
