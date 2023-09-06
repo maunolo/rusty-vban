@@ -152,7 +152,7 @@ fn write_data<T>(
     for samples in input.chunks_exact(chunk_num_samples) {
         let mut buffer = Vec::new();
 
-        header.set_num_samples(samples.len() as u8 / header.num_channels());
+        header.set_num_samples(samples.len() as u8 / header.num_channels() - 1);
         header.set_frame_number(*frame_count);
         let header: [u8; 28] = header.into();
         let data = samples
