@@ -7,6 +7,7 @@ use cpal::{
     FromSample, Sample, SampleFormat, SizedSample, SupportedStreamConfig,
 };
 
+use crate::utils;
 use crate::utils::cpal::{Device, Host};
 
 use super::ring_buffer::VbanStreamConsumer;
@@ -18,8 +19,8 @@ pub struct VbanReceptorStream {
 }
 
 impl VbanReceptorStream {
-    pub fn new(device_name: &str, device_type: &str) -> Result<Self> {
-        let host = cpal::default_host();
+    pub fn new(device_name: &str, device_type: &str, host_name: &str) -> Result<Self> {
+        let host = utils::cpal::host_by_name(host_name)?;
         let device = Arc::new(match device_type {
             "input" => host
                 .find_input_device(device_name)

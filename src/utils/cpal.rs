@@ -1,6 +1,21 @@
 use anyhow::{anyhow, Result};
 use cpal::traits::{DeviceTrait, HostTrait};
 
+pub fn host_by_name(name: &str) -> Result<cpal::Host> {
+    if name == "default" {
+        return Ok(cpal::default_host());
+    }
+
+    let host_ids = cpal::available_hosts();
+    for host in host_ids {
+        if host.name() == name {
+            return Ok(cpal::host_from_id(host)?);
+        }
+    }
+
+    Err(anyhow!("No host found with name {}", name))
+}
+
 pub trait Host {
     fn find_input_device(&self, name: &str) -> Option<cpal::Device>;
     fn find_output_device(&self, name: &str) -> Option<cpal::Device>;

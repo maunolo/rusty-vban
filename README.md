@@ -12,6 +12,7 @@ EmitterBuilder::default()
     .port(6890) // Optional, default: 6890
     .channels(2) // Optional, default: 2
     .device("default") // Optional, default: "default"
+    .backend("default") // Optional, default: "default"
     .build()
     .unwrap()
     .start()
@@ -29,6 +30,7 @@ ReceptorBuilder::default()
     .port(6890) // Optional, default: 6890
     .channels(2) // Optional, default: 2
     .device("default") // Optional, default: "default"
+    .backend("default") // Optional, default: "default"
     .build()
     .unwrap()
     .start()
