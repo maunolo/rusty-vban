@@ -4,7 +4,7 @@
 
 ### Emitter
 ```rust
-use rusty_vban::emitter::EmitterBuilder;
+use rusty_vban::emitter::{EmitterBuilder, EmitterOptions};
 
 EmitterBuilder::default()
     .ip_address("192.168.0.1")
@@ -15,13 +15,13 @@ EmitterBuilder::default()
     .backend("default") // Optional, default: "default"
     .build()
     .unwrap()
-    .start()
+    .run(EmitterOptions::default())
     .unwrap();
 ```
 
 ### Receptor
 ```rust
-use rusty_vban::receptor::ReceptorBuilder;
+use rusty_vban::receptor::{ReceptorBuilder, ReceptorOptions};
 
 ReceptorBuilder::default()
     .latency(16) // Optional, default: 16
@@ -33,6 +33,6 @@ ReceptorBuilder::default()
     .backend("default") // Optional, default: "default"
     .build()
     .unwrap()
-    .start()
+    .run(ReceptorOptions::default())
     .unwrap();
 ```
