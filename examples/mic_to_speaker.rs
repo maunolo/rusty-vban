@@ -8,7 +8,7 @@ use rusty_vban::{
 fn main() -> Result<()> {
     std::thread::spawn(move || -> Result<()> {
         emitter::EmitterBuilder::default()
-            .ip_address(&local_ip().unwrap().to_string())
+            .ip_address(local_ip().unwrap().to_string())
             .port(9000)
             .stream_name("Mic")
             .build()?
@@ -16,8 +16,8 @@ fn main() -> Result<()> {
     });
 
     receptor::ReceptorBuilder::default()
-        .ip_address(&local_ip().unwrap().to_string())
-        .port(9000 as u16)
+        .ip_address(local_ip().unwrap().to_string())
+        .port(9000)
         .stream_name("Mic")
         .build()?
         .run(ReceptorOptions { retry: true })

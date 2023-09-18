@@ -38,8 +38,8 @@ impl EmitterBuilder {
         }
     }
 
-    pub fn stream_name(mut self, stream_name: &str) -> Self {
-        self.stream_name = Some(stream_name.to_string());
+    pub fn stream_name<T: Into<String>>(mut self, stream_name: T) -> Self {
+        self.stream_name = Some(stream_name.into());
         self
     }
 
@@ -48,8 +48,8 @@ impl EmitterBuilder {
         self
     }
 
-    pub fn ip_address(mut self, ip_address: &str) -> Self {
-        self.ip_address = Some(ip_address.to_string());
+    pub fn ip_address<T: Into<String>>(mut self, ip_address: T) -> Self {
+        self.ip_address = Some(ip_address.into());
         self
     }
 
@@ -58,18 +58,18 @@ impl EmitterBuilder {
         self
     }
 
-    pub fn device(mut self, device: &str) -> Self {
-        self.device = device.to_string();
+    pub fn device<T: Into<String>>(mut self, device: T) -> Self {
+        self.device = device.into();
         self
     }
 
-    pub fn device_type(mut self, device_type: &str) -> Self {
-        self.device_type = device_type.to_string();
+    pub fn device_type<T: Into<String>>(mut self, device_type: T) -> Self {
+        self.device_type = device_type.into();
         self
     }
 
-    pub fn backend(mut self, backend: &str) -> Self {
-        self.backend = backend.to_string();
+    pub fn backend<T: Into<String>>(mut self, backend: T) -> Self {
+        self.backend = backend.into();
         self
     }
 
