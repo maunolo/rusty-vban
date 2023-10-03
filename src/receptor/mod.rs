@@ -169,9 +169,15 @@ impl Receptor {
         self.socket.stop()
     }
 
-    pub fn rebuild(mut self) -> Result<Self> {
-        let _ = self.pause();
-        let params = self.params;
+    pub fn rebuild(self) -> Result<Self> {
+        let Self {
+            params,
+            stream,
+            socket,
+        } = self;
+
+        drop(socket);
+        drop(stream);
 
         let (stream, producer) = VbanReceptorStreamBuilder::default()
             .device_name(&params.device)

@@ -138,9 +138,10 @@ impl Emitter {
         self.stream.pause()
     }
 
-    pub fn rebuild(mut self) -> Result<Self> {
-        let _ = self.pause();
-        let params = self.params;
+    pub fn rebuild(self) -> Result<Self> {
+        let Self { stream, params } = self;
+
+        drop(stream);
 
         let stream = VbanEmitterStreamBuilder::default()
             .device_name(&params.device)
