@@ -180,6 +180,15 @@ impl VbanReceptorSocket {
     }
 }
 
+impl Drop for VbanReceptorSocket {
+    fn drop(&mut self) {
+        let _ = self.stop();
+        if let Some(handle) = self.player_handle.take() {
+            let _ = handle.join();
+        }
+    }
+}
+
 fn check_src(ip_address: &IpAddr, src: &SocketAddr) -> Result<()> {
     if &src.ip() != ip_address {
         return Err(anyhow!("Wrong source"));
