@@ -116,19 +116,18 @@ impl Default for EmitterOptions {
 }
 
 impl Emitter {
-    pub fn run(&mut self, options: EmitterOptions) -> Result<()> {
+    pub fn run(mut self, options: EmitterOptions) -> Result<Self> {
         self.play()?;
 
         while self.stream.should_run(&self.params.device) {
             std::thread::sleep(std::time::Duration::from_millis(100));
         }
 
-        if options.retry {
-            self.rebuild()?;
-            self.run(options)?;
-        }
-
-        Ok(())
+        Ok(if options.retry {
+            self.rebuild()?.run(options)?
+        } else {
+            self
+        })
     }
 
     pub fn play(&mut self) -> Result<()> {
@@ -139,18 +138,19 @@ impl Emitter {
         self.stream.pause()
     }
 
-    pub fn rebuild(&mut self) -> Result<()> {
+    pub fn rebuild(mut self) -> Result<Self> {
         let _ = self.pause();
+        let params = self.params;
 
-        self.stream = VbanEmitterStreamBuilder::default()
-            .device_name(&self.params.device)
-            .device_type(&self.params.device_type)
-            .host_name(&self.params.backend)
-            .ip_address(&self.params.ip_address)
-            .port(self.params.port)
-            .stream_name(&self.params.stream_name)
+        let stream = VbanEmitterStreamBuilder::default()
+            .device_name(&params.device)
+            .device_type(&params.device_type)
+            .host_name(&params.backend)
+            .ip_address(&params.ip_address)
+            .port(params.port)
+            .stream_name(&params.stream_name)
             .build()?;
 
-        Ok(())
+        Ok(Self { stream, params })
     }
 }

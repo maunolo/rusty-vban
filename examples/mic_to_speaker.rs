@@ -7,18 +7,22 @@ use rusty_vban::{
 
 fn main() -> Result<()> {
     std::thread::spawn(move || -> Result<()> {
-        emitter::EmitterBuilder::default()
+        let _ = emitter::EmitterBuilder::default()
             .ip_address(local_ip().unwrap().to_string())
             .port(9000)
             .stream_name("Mic")
             .build()?
-            .run(EmitterOptions { retry: true })
+            .run(EmitterOptions { retry: true });
+
+        Ok(())
     });
 
-    receptor::ReceptorBuilder::default()
+    let _ = receptor::ReceptorBuilder::default()
         .ip_address(local_ip().unwrap().to_string())
         .port(9000)
         .stream_name("Mic")
         .build()?
-        .run(ReceptorOptions { retry: true })
+        .run(ReceptorOptions { retry: true });
+
+    Ok(())
 }

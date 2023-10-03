@@ -145,19 +145,18 @@ impl Default for ReceptorOptions {
 }
 
 impl Receptor {
-    pub fn run(&mut self, options: ReceptorOptions) -> Result<()> {
+    pub fn run(mut self, options: ReceptorOptions) -> Result<Self> {
         self.play()?;
 
         while self.stream.should_run(&self.params.device) {
             std::thread::sleep(std::time::Duration::from_millis(100));
         }
 
-        if options.retry {
-            self.rebuild()?;
-            self.run(options)?;
-        }
-
-        Ok(())
+        Ok(if options.retry {
+            self.rebuild()?.run(options)?
+        } else {
+            self
+        })
     }
 
     pub fn play(&mut self) -> Result<()> {
@@ -170,27 +169,29 @@ impl Receptor {
         self.socket.stop()
     }
 
-    pub fn rebuild(&mut self) -> Result<()> {
+    pub fn rebuild(mut self) -> Result<Self> {
         let _ = self.pause();
+        let params = self.params;
 
         let (stream, producer) = VbanReceptorStreamBuilder::default()
-            .device_name(&self.params.device)
-            .device_type(&self.params.device_type)
-            .host_name(&self.params.backend)
-            .latency(self.params.latency as f32)
+            .device_name(&params.device)
+            .device_type(&params.device_type)
+            .host_name(&params.backend)
+            .latency(params.latency as f32)
             .build()?;
 
         let socket = VbanReceptorSocketBuilder::default()
-            .port(self.params.port)
-            .incoming_addr(&self.params.ip_address)
-            .incoming_stream_name(&self.params.stream_name)
-            .channels(self.params.channels)
+            .port(params.port)
+            .incoming_addr(&params.ip_address)
+            .incoming_stream_name(&params.stream_name)
+            .channels(params.channels)
             .producer(producer)
             .build()?;
 
-        self.stream = stream;
-        self.socket = socket;
-
-        Ok(())
+        Ok(Self {
+            stream,
+            socket,
+            params,
+        })
     }
 }
