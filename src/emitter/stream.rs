@@ -3,7 +3,7 @@ use dasp_sample::ToSample;
 
 use std::{
     net::{SocketAddr, UdpSocket},
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 
 use cpal::{
@@ -15,6 +15,11 @@ use crate::protocol::header::{Header, MAX_NUM_SAMPLES};
 use crate::utils;
 use crate::utils::cpal::{Device, Host};
 use crate::utils::log;
+
+pub struct StreamWrapper(Arc<Mutex<cpal::Stream>>);
+
+unsafe impl Send for StreamWrapper {}
+unsafe impl Sync for StreamWrapper {}
 
 pub struct VbanEmitterStreamBuilder {
     device_name: Option<String>,
@@ -77,7 +82,7 @@ impl VbanEmitterStreamBuilder {
         let port = self.port.context("port is required")?;
         let stream_name = self.stream_name.context("stream name is required")?;
 
-        let host = utils::cpal::host_by_name(&host_name)?;
+        let host = Arc::new(utils::cpal::host_by_name(&host_name)?);
         let device = Arc::new(match device_type.as_str() {
             "input" => host
                 .find_input_device(&device_name)
@@ -93,7 +98,7 @@ impl VbanEmitterStreamBuilder {
         let header = Header::new(&stream_name);
         let target = SocketAddr::new(ip_address.parse()?, port);
 
-        let stream = build_stream_for_sample_format(
+        let stream = StreamWrapper(Arc::new(Mutex::new(build_stream_for_sample_format(
             device.default_input_config()?.sample_format(),
             StreamParams {
                 device: device.clone(),
@@ -101,7 +106,7 @@ impl VbanEmitterStreamBuilder {
                 addrs,
                 target,
             },
-        )?;
+        )?)));
 
         Ok(VbanEmitterStream {
             host,
@@ -112,26 +117,22 @@ impl VbanEmitterStreamBuilder {
 }
 
 pub struct VbanEmitterStream {
-    host: cpal::Host,
+    host: Arc<cpal::Host>,
     device: Arc<cpal::Device>,
-    stream: cpal::Stream,
+    stream: StreamWrapper,
 }
 
 impl VbanEmitterStream {
     pub fn play(&self) -> Result<()> {
-        self.stream().play()?;
+        self.stream.0.lock().unwrap().play()?;
 
         Ok(())
     }
 
     pub fn pause(&self) -> Result<()> {
-        self.stream().pause()?;
+        self.stream.0.lock().unwrap().pause()?;
 
         Ok(())
-    }
-
-    pub fn stream(&self) -> &cpal::Stream {
-        &self.stream
     }
 
     pub fn should_run(&self, device_name: &str) -> bool {

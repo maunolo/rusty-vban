@@ -1,6 +1,9 @@
 use anyhow::{anyhow, Context, Result};
 
-use std::{mem::MaybeUninit, sync::Arc};
+use std::{
+    mem::MaybeUninit,
+    sync::{Arc, Mutex},
+};
 
 use cpal::{
     traits::{DeviceTrait, StreamTrait},
@@ -14,6 +17,11 @@ use crate::utils::{self, log};
 
 pub type VbanStreamConsumer = Consumer<i16, Arc<SharedRb<i16, Vec<MaybeUninit<i16>>>>>;
 pub type VbanStreamProducer = Producer<i16, Arc<SharedRb<i16, Vec<MaybeUninit<i16>>>>>;
+
+pub struct StreamWrapper(Arc<Mutex<cpal::Stream>>);
+
+unsafe impl Send for StreamWrapper {}
+unsafe impl Sync for StreamWrapper {}
 
 fn start_ring_buffer(
     latency: f32,
@@ -80,7 +88,7 @@ impl VbanReceptorStreamBuilder {
         let host_name = self.host_name.context("host name is required")?;
         let latency = self.latency.context("latency is required")?;
 
-        let host = utils::cpal::host_by_name(&host_name)?;
+        let host = Arc::new(utils::cpal::host_by_name(&host_name)?);
         let device = Arc::new(match device_type.as_str() {
             "input" => host
                 .find_input_device(&device_name)
@@ -93,13 +101,13 @@ impl VbanReceptorStreamBuilder {
         let device_config = device.default_output_config()?;
         let sample_format = device_config.sample_format();
         let (producer, consumer) = start_ring_buffer(latency, &device_config);
-        let stream = build_stream_for_sample_format(
+        let stream = StreamWrapper(Arc::new(Mutex::new(build_stream_for_sample_format(
             sample_format,
             StreamParams {
                 device: device.clone(),
                 consumer,
             },
-        )?;
+        )?)));
 
         Ok((
             VbanReceptorStream {
@@ -113,26 +121,22 @@ impl VbanReceptorStreamBuilder {
 }
 
 pub struct VbanReceptorStream {
-    host: cpal::Host,
+    host: Arc<cpal::Host>,
     device: Arc<cpal::Device>,
-    stream: cpal::Stream,
+    stream: StreamWrapper,
 }
 
 impl VbanReceptorStream {
     pub fn play(&self) -> Result<()> {
-        self.stream().play()?;
+        self.stream.0.lock().unwrap().play()?;
 
         Ok(())
     }
 
     pub fn pause(&self) -> Result<()> {
-        self.stream().pause()?;
+        self.stream.0.lock().unwrap().pause()?;
 
         Ok(())
-    }
-
-    pub fn stream(&self) -> &cpal::Stream {
-        &self.stream
     }
 
     pub fn should_run(&self, device_name: &str) -> bool {
