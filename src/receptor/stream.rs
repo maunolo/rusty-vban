@@ -7,7 +7,8 @@ use std::{
 
 use cpal::{
     traits::{DeviceTrait, StreamTrait},
-    FromSample, Sample, SampleFormat, SizedSample, SupportedStreamConfig,
+    FromSample, PauseStreamError, PlayStreamError, Sample, SampleFormat, SizedSample, StreamError,
+    SupportedStreamConfig,
 };
 
 use ringbuf::{Consumer, HeapRb, Producer, SharedRb};
@@ -106,6 +107,7 @@ impl VbanReceptorStreamBuilder {
             StreamParams {
                 device: device.clone(),
                 consumer,
+                status: Arc::new(Mutex::new(Status::Ok)),
             },
         )?)));
 
@@ -127,13 +129,13 @@ pub struct VbanReceptorStream {
 }
 
 impl VbanReceptorStream {
-    pub fn play(&self) -> Result<()> {
+    pub fn play(&self) -> Result<(), PlayStreamError> {
         self.stream.0.lock().unwrap().play()?;
 
         Ok(())
     }
 
-    pub fn pause(&self) -> Result<()> {
+    pub fn pause(&self) -> Result<(), PauseStreamError> {
         self.stream.0.lock().unwrap().pause()?;
 
         Ok(())
@@ -153,6 +155,14 @@ impl VbanReceptorStream {
 struct StreamParams {
     device: Arc<cpal::Device>,
     consumer: VbanStreamConsumer,
+    status: StreamStatus,
+}
+
+type StreamStatus = Arc<Mutex<Status>>;
+
+enum Status {
+    Ok,
+    Err(StreamError),
 }
 
 fn build_stream_for_sample_format(
@@ -178,7 +188,11 @@ fn build_stream<T>(params: StreamParams) -> Result<cpal::Stream>
 where
     T: SizedSample + FromSample<i16> + FromSample<f32> + Send + Sync,
 {
-    let StreamParams { device, consumer } = params;
+    let StreamParams {
+        device,
+        consumer,
+        status,
+    } = params;
     let config = device.default_output_config()?;
     let channels = config.channels() as usize;
 
@@ -187,6 +201,7 @@ where
         build_data_callback::<T>(consumer, channels),
         move |err| {
             log::error(&format!("an error occurred on stream: {}", err));
+            *status.lock().unwrap() = Status::Err(err);
         },
         None,
     )?;

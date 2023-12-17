@@ -3,6 +3,8 @@ mod stream;
 
 use anyhow::{Context, Result};
 
+use crate::utils::errors::RustyVbanError;
+
 use self::{
     socket::{VbanReceptorSocket, VbanReceptorSocketBuilder},
     stream::{VbanReceptorStream, VbanReceptorStreamBuilder},
@@ -145,7 +147,7 @@ impl Default for ReceptorOptions {
 }
 
 impl Receptor {
-    pub fn run(mut self, options: ReceptorOptions) -> Result<Self> {
+    pub fn run(mut self, options: ReceptorOptions) -> Result<Self, RustyVbanError> {
         self.play()?;
 
         while self.stream.should_run(&self.params.device) {
@@ -159,14 +161,20 @@ impl Receptor {
         })
     }
 
-    pub fn play(&mut self) -> Result<()> {
+    pub fn play(&mut self) -> Result<(), RustyVbanError> {
         self.stream.play()?;
-        self.socket.start()
+        self.socket.start()?;
+        Ok(())
     }
 
-    pub fn pause(&mut self) -> Result<()> {
+    pub fn pause(&mut self) -> Result<(), RustyVbanError> {
         self.stream.pause()?;
-        self.socket.stop()
+        self.socket.stop()?;
+        Ok(())
+    }
+
+    pub fn should_run(&self) -> bool {
+        self.stream.should_run(&self.params.device)
     }
 
     pub fn rebuild(self) -> Result<Self> {

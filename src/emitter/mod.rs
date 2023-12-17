@@ -2,6 +2,8 @@ mod stream;
 
 use anyhow::{Context, Result};
 
+use crate::utils::errors::RustyVbanError;
+
 use self::stream::{VbanEmitterStream, VbanEmitterStreamBuilder};
 
 pub struct EmitterBuilder {
@@ -116,7 +118,7 @@ impl Default for EmitterOptions {
 }
 
 impl Emitter {
-    pub fn run(mut self, options: EmitterOptions) -> Result<Self> {
+    pub fn run(mut self, options: EmitterOptions) -> Result<Self, RustyVbanError> {
         self.play()?;
 
         while self.stream.should_run(&self.params.device) {
@@ -130,12 +132,20 @@ impl Emitter {
         })
     }
 
-    pub fn play(&mut self) -> Result<()> {
-        self.stream.play()
+    pub fn play(&mut self) -> Result<(), RustyVbanError> {
+        self.stream.play()?;
+
+        Ok(())
     }
 
-    pub fn pause(&mut self) -> Result<()> {
-        self.stream.pause()
+    pub fn pause(&mut self) -> Result<(), RustyVbanError> {
+        self.stream.pause()?;
+
+        Ok(())
+    }
+
+    pub fn should_run(&self) -> bool {
+        self.stream.should_run(&self.params.device)
     }
 
     pub fn rebuild(self) -> Result<Self> {

@@ -8,7 +8,7 @@ use std::{
 
 use cpal::{
     traits::{DeviceTrait, StreamTrait},
-    Sample, SampleFormat, SizedSample,
+    PauseStreamError, PlayStreamError, Sample, SampleFormat, SizedSample,
 };
 
 use crate::protocol::header::{Header, MAX_NUM_SAMPLES};
@@ -123,13 +123,13 @@ pub struct VbanEmitterStream {
 }
 
 impl VbanEmitterStream {
-    pub fn play(&self) -> Result<()> {
+    pub fn play(&self) -> Result<(), PlayStreamError> {
         self.stream.0.lock().unwrap().play()?;
 
         Ok(())
     }
 
-    pub fn pause(&self) -> Result<()> {
+    pub fn pause(&self) -> Result<(), PauseStreamError> {
         self.stream.0.lock().unwrap().pause()?;
 
         Ok(())
