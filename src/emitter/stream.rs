@@ -11,10 +11,13 @@ use cpal::{
     PauseStreamError, PlayStreamError, Sample, SampleFormat, SizedSample,
 };
 
-use crate::protocol::header::{Header, MAX_NUM_SAMPLES};
-use crate::utils;
 use crate::utils::cpal::{Device, Host};
 use crate::utils::log;
+use crate::utils::{self, cpal::Status};
+use crate::{
+    protocol::header::{Header, MAX_NUM_SAMPLES},
+    utils::cpal::StreamStatus,
+};
 
 pub struct StreamWrapper(Arc<Mutex<cpal::Stream>>);
 
@@ -97,6 +100,7 @@ impl VbanEmitterStreamBuilder {
             .collect::<Vec<SocketAddr>>();
         let header = Header::new(&stream_name);
         let target = SocketAddr::new(ip_address.parse()?, port);
+        let status = Arc::new(Mutex::new(Status::Ok));
 
         let stream = StreamWrapper(Arc::new(Mutex::new(build_stream_for_sample_format(
             device.default_input_config()?.sample_format(),
@@ -105,6 +109,7 @@ impl VbanEmitterStreamBuilder {
                 header,
                 addrs,
                 target,
+                status: status.clone(),
             },
         )?)));
 
@@ -112,6 +117,7 @@ impl VbanEmitterStreamBuilder {
             host,
             device,
             stream,
+            status,
         })
     }
 }
@@ -120,6 +126,7 @@ pub struct VbanEmitterStream {
     host: Arc<cpal::Host>,
     device: Arc<cpal::Device>,
     stream: StreamWrapper,
+    status: StreamStatus,
 }
 
 impl VbanEmitterStream {
@@ -136,11 +143,20 @@ impl VbanEmitterStream {
     }
 
     pub fn should_run(&self, device_name: &str) -> bool {
-        if device_name == "default" && !self.device.is_default_input(&self.host) {
+        if !self.running()
+            || (device_name == "default" && !self.device.is_default_input(&self.host))
+        {
             return false;
         }
 
         true
+    }
+
+    fn running(&self) -> bool {
+        match *self.status.lock().unwrap() {
+            Status::Ok => true,
+            Status::Err(_) => false,
+        }
     }
 }
 
@@ -149,6 +165,7 @@ struct StreamParams {
     header: Header,
     addrs: Vec<SocketAddr>,
     target: SocketAddr,
+    status: StreamStatus,
 }
 
 fn build_stream_for_sample_format(
@@ -179,9 +196,13 @@ where
         header,
         addrs,
         target,
+        status,
     } = params;
     let config = device.default_input_config()?;
-    let err_fn = move |error| log::error(&format!("an error occurred on stream: {}", error));
+    let err_fn = move |error| {
+        log::error(&format!("an error occurred on stream: {}", error));
+        *status.lock().unwrap() = Status::Err(error);
+    };
     let mut frame_count = 0;
 
     let socket = UdpSocket::bind(&addrs[..])?;

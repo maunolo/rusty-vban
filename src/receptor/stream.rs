@@ -7,13 +7,13 @@ use std::{
 
 use cpal::{
     traits::{DeviceTrait, StreamTrait},
-    FromSample, PauseStreamError, PlayStreamError, Sample, SampleFormat, SizedSample, StreamError,
+    FromSample, PauseStreamError, PlayStreamError, Sample, SampleFormat, SizedSample,
     SupportedStreamConfig,
 };
 
 use ringbuf::{Consumer, HeapRb, Producer, SharedRb};
 
-use crate::utils::cpal::{Device, Host};
+use crate::utils::cpal::{Device, Host, Status, StreamStatus};
 use crate::utils::{self, log};
 
 pub type VbanStreamConsumer = Consumer<i16, Arc<SharedRb<i16, Vec<MaybeUninit<i16>>>>>;
@@ -102,12 +102,13 @@ impl VbanReceptorStreamBuilder {
         let device_config = device.default_output_config()?;
         let sample_format = device_config.sample_format();
         let (producer, consumer) = start_ring_buffer(latency, &device_config);
+        let status = Arc::new(Mutex::new(Status::Ok));
         let stream = StreamWrapper(Arc::new(Mutex::new(build_stream_for_sample_format(
             sample_format,
             StreamParams {
                 device: device.clone(),
                 consumer,
-                status: Arc::new(Mutex::new(Status::Ok)),
+                status: status.clone(),
             },
         )?)));
 
@@ -116,6 +117,7 @@ impl VbanReceptorStreamBuilder {
                 host,
                 device,
                 stream,
+                status,
             },
             producer,
         ))
@@ -126,6 +128,7 @@ pub struct VbanReceptorStream {
     host: Arc<cpal::Host>,
     device: Arc<cpal::Device>,
     stream: StreamWrapper,
+    status: StreamStatus,
 }
 
 impl VbanReceptorStream {
@@ -142,7 +145,9 @@ impl VbanReceptorStream {
     }
 
     pub fn should_run(&self, device_name: &str) -> bool {
-        if device_name == "default" && !self.device.is_default_output(&self.host) {
+        if !self.running()
+            || (device_name == "default" && !self.device.is_default_output(&self.host))
+        {
             self.pause().ok();
 
             return false;
@@ -150,19 +155,19 @@ impl VbanReceptorStream {
 
         true
     }
+
+    fn running(&self) -> bool {
+        match *self.status.lock().unwrap() {
+            Status::Ok => true,
+            Status::Err(_) => false,
+        }
+    }
 }
 
 struct StreamParams {
     device: Arc<cpal::Device>,
     consumer: VbanStreamConsumer,
     status: StreamStatus,
-}
-
-type StreamStatus = Arc<Mutex<Status>>;
-
-enum Status {
-    Ok,
-    Err(StreamError),
 }
 
 fn build_stream_for_sample_format(

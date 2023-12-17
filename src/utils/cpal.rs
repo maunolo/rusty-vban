@@ -1,5 +1,10 @@
+use std::sync::{Arc, Mutex};
+
 use anyhow::{anyhow, Result};
-use cpal::traits::{DeviceTrait, HostTrait};
+use cpal::{
+    traits::{DeviceTrait, HostTrait},
+    StreamError,
+};
 
 pub fn host_by_name(name: &str) -> Result<cpal::Host> {
     if name == "default" {
@@ -127,4 +132,12 @@ impl Devices for cpal::Devices {
             }
         })
     }
+}
+
+pub type StreamStatus = Arc<Mutex<Status>>;
+
+#[derive(Debug)]
+pub enum Status {
+    Ok,
+    Err(StreamError),
 }
